@@ -20,9 +20,11 @@ def readXlsx():
     df.to_excel('result1.xlsx')
 
     df.iloc[:,].plot(style=".")
+    plt.ylabel("importanc rate")
+    plt.legend(title='Number of\n executions')
     plt.show()
 
-def kMeans(num):
+def OneDimensionalkMeans(num):
     print("kMeans")
     df = pd.read_excel('result1.xlsx', header=0)
     list_of_index = [item for item in df.iloc[:, 0]]
@@ -61,7 +63,7 @@ def kMeans(num):
 
     select_SVID = {}
     for key, value in total_SVID_count.items():
-        if value == 10:
+        if value == num:
             select_SVID[key] = value
     listSelectSVID = list(select_SVID)
     print("Last selected key svid count", len(listSelectSVID))

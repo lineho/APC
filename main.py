@@ -16,24 +16,24 @@ if __name__ == "__main__":
     # SVID extraction step.
     ###################################################################
     # Separate numeric and character data.
-    #numericDataList, nonNumericDataList = dataPreprocessing.isNumeric(DB.connectDB())
+    numericDataList, nonNumericDataList = dataPreprocessing.isNumeric(DB.connectDB())
 
     # Feature X,Y Extract for Machine Learning for SVID Selection.
-    #x,y = dataPreprocessing.extractRawData(numericDataList, nonNumericDataList)
+    x,y = dataPreprocessing.extractRawData(numericDataList, nonNumericDataList)
 
     # Number of radomForrest runs
-    runNum = 10
+    runNum = 20
 
     # Run i to verify importace rate. i Run to remove extreme randomness.
     # Permutation importance makes it more accurate but takes longer to run.
-    #randomForest.severalTimesRandomForest(x, y, runNum)
+    randomForest.severalTimesRandomForest(x, y, runNum)
 
     # kMeans Clustering
     # The reason I saved it in Excel is to cut it off at this point.
     kMeans.readXlsx()
 
     # Select SVID with somewhat higher importance rate by 1-D means. (k=2)
-    kMeans.kMeans(runNum)
+    kMeans.OneDimensionalkMeans(runNum)
     ###################################################################
     
     # multiprocessing단계
