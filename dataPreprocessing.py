@@ -5,8 +5,8 @@ from pandas import DataFrame
 from sqlalchemy import create_engine
 import numpy as np
 import xlsxwriter
-
 from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import MinMaxScaler
 
 #pd.set_option('display.max_rows', None)
 #pd.set_option('display.max_columns', None)
@@ -24,7 +24,7 @@ def extractRawData(numericDataList, nonNumericDataList):
     print("Start extractRawData")
     query = "SELECT * FROM fdc_data_20201022_raw ORDER BY time"
     dfRawData20201022 = pd.read_sql_query(query, DB.connectDB())
-    
+
     #Outputs the raw data received.
     #print("dfRawData20201022: ",dfRawData20201022)
 
@@ -47,6 +47,10 @@ def extractRawData(numericDataList, nonNumericDataList):
     dummy_columns = nonNumericDataList
     dfProcessingData20201022_extractVID433_X_dummy = dummy_data(dfProcessingData20201022_extractVID433_X, dummy_columns)
     print(dfProcessingData20201022_extractVID433_X_dummy.shape)
+
+
+    #scale
+
 
     return dfProcessingData20201022_extractVID433_X_dummy, dfProcessingData20201022_extractVID433_Y
 

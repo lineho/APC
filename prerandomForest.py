@@ -35,14 +35,16 @@ def randomForest(x, y, num):
     print('accuracy :', metrics.accuracy_score(y_test, y_pred))
     num = num-1
     ftr_importances_values = forest.feature_importances_
-    ftr_importances_20 = pd.Series(ftr_importances_values, index=x_train.columns)
+    ftr_importances_10 = pd.Series(ftr_importances_values, index=x_train.columns)
     ftr_importances = pd.DataFrame(ftr_importances_values, index = x_train.columns)
     print(ftr_importances)
-    ftr_top20 = ftr_importances_20.sort_values(ascending=False)[:20]
+    ftr_top10 = ftr_importances_10.sort_values(ascending=False)[:10]
 
-    plt.figure(figsize=(13,10))
-    plt.title('Top 20 Feature Importances')
-    sns.barplot(x=ftr_top20, y=ftr_top20.index)
+    #plt.figure(figsize=(13,10))
+    plt.title('Top 10 Feature Importances')
+    plt.ylabel("SVID_Num")
+    plt.xlabel("importanc rate")
+    sns.barplot(x=ftr_top10, y=ftr_top10.index)
     plt.show()
 
     # permutation importance (feat. Hyukjun)

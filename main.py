@@ -1,18 +1,21 @@
 import DB
 import dataPreprocessing
-import randomForest
+import prerandomForest
 import pandas as pd
 import multiprocessing as mp
 from multiprocessing import Process,Value, Array
 from time import sleep
 import xlsxwriter
-import kMeans
+import postPreprocessing
+import prekMeans
+import preXGBoost
 
 DB.connectDB()
 
 # main process
 if __name__ == "__main__":
 
+    # Preprocessing
     # SVID extraction step.
     ###################################################################
     # Separate numeric and character data.
@@ -22,18 +25,22 @@ if __name__ == "__main__":
     x,y = dataPreprocessing.extractRawData(numericDataList, nonNumericDataList)
 
     # Number of radomForrest runs
-    runNum = 20
+    runNum = 10
 
+    # Use XGBooost or RandomFoerst
     # Run i to verify importace rate. i Run to remove extreme randomness.
     # Permutation importance makes it more accurate but takes longer to run.
-    randomForest.severalTimesRandomForest(x, y, runNum)
+    #prerandomForest.severalTimesRandomForest(x, y, runNum)
+    preXGBoost.severalTimesrunXGBoost(x, y, runNum)
 
     # kMeans Clustering
     # The reason I saved it in Excel is to cut it off at this point.
-    kMeans.readXlsx()
-
+    # You can make code with DB later.
     # Select SVID with somewhat higher importance rate by 1-D means. (k=2)
-    kMeans.OneDimensionalkMeans(runNum)
+    prekMeans.readXlsx()
+    listSelectedSVID = prekMeans.OneDimensionalkMeans(runNum)
+
+    postPreprocessing.PostPreprocess(listSelectedSVID, x, y)
     ###################################################################
     
     # multiprocessing단계

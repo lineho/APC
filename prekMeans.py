@@ -17,16 +17,17 @@ def readXlsx():
     df= df.dropna(axis=0)
     df.columns = np.arange(len(df.columns))+1
 
-    df.to_excel('result1.xlsx')
+    df.to_excel('resultPreprocessingKMenas.xlsx')
 
     df.iloc[:,].plot(style=".")
+    plt.title('Importance rate results that run 10 times')
     plt.ylabel("importanc rate")
     plt.legend(title='Number of\n executions')
     plt.show()
 
 def OneDimensionalkMeans(num):
     print("kMeans")
-    df = pd.read_excel('result1.xlsx', header=0)
+    df = pd.read_excel('resultPreprocessingKMenas.xlsx', header=0)
     list_of_index = [item for item in df.iloc[:, 0]]
     #print(list_of_index)
 
@@ -38,19 +39,26 @@ def OneDimensionalkMeans(num):
 
         df1 = df.iloc[:, i:i + 1]
         x = df1.values.reshape(-1, ).tolist()
-        k = 2
+
+        # XGBoost Using k=4
+        # randomforest Using k=2
+        # k = 2
+        k = 4
 
         clusters, centroids = kmeans1d.cluster(x, k)
-        #print(clusters)
-        print("Count Key SVID:",clusters.count(1))
-        #print(centroids)
-        dic = dict(zip(list_of_index, clusters))
+        # print("clusters: ",clusters)
+        #print("Count Key SVID k=1:",clusters.count(1))
+        #print("Count Key SVID k=2:",clusters.count(2))
 
+        # print("centroids: ",centroids)
+        dic = dict(zip(list_of_index, clusters))
+        #print(dic)
+        #remove k=0
         for key, value in dic.items():
             if value != 0:
-                globals()['Var_{}'.format(i)][key] = value
+                globals()['Var_{}'.format(i)][key] = 1
 
-        # keySVID_List = list(dic1.keys())
+        # keySVID_List = list(dic.keys())
         # print(keySVID_List)
 
     total_SVID_count = Counter(globals()['Var_{}'.format(1)])
@@ -59,7 +67,7 @@ def OneDimensionalkMeans(num):
         total_SVID_count += Counter(globals()['Var_{}'.format(i)])
 
     total_SVID_count = dict(total_SVID_count)
-    #print(total_SVID_count)
+    print(total_SVID_count)
 
     select_SVID = {}
     for key, value in total_SVID_count.items():
@@ -68,3 +76,5 @@ def OneDimensionalkMeans(num):
     listSelectSVID = list(select_SVID)
     print("Last selected key svid count", len(listSelectSVID))
     print(listSelectSVID)
+
+    return listSelectSVID
