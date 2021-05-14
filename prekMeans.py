@@ -17,7 +17,7 @@ def readXlsx():
     df= df.dropna(axis=0)
     df.columns = np.arange(len(df.columns))+1
 
-    df.to_excel('resultPreprocessingKMenas.xlsx')
+    df.to_excel('resultPreprocessing1.xlsx')
 
     df.iloc[:,].plot(style=".")
     plt.title('Importance rate results that run 10 times')
@@ -27,7 +27,7 @@ def readXlsx():
 
 def OneDimensionalkMeans(num):
     print("kMeans")
-    df = pd.read_excel('resultPreprocessingKMenas.xlsx', header=0)
+    df = pd.read_excel('resultPreprocessing1.xlsx', header=0)
     list_of_index = [item for item in df.iloc[:, 0]]
     #print(list_of_index)
 
@@ -42,15 +42,15 @@ def OneDimensionalkMeans(num):
 
         # XGBoost Using k=4
         # randomforest Using k=2
-        # k = 2
+        #k = 3
         k = 4
 
         clusters, centroids = kmeans1d.cluster(x, k)
-        # print("clusters: ",clusters)
+        #print("clusters: ",clusters)
         #print("Count Key SVID k=1:",clusters.count(1))
         #print("Count Key SVID k=2:",clusters.count(2))
 
-        # print("centroids: ",centroids)
+        print("centroids: ",centroids)
         dic = dict(zip(list_of_index, clusters))
         #print(dic)
         #remove k=0

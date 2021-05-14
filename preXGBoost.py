@@ -19,20 +19,26 @@ warnings.filterwarnings('ignore')
 
 def runXGBoost(x, y, num):
     #print("Start XGBoost: " + str(num))
+    #tx = tx.astype('float', copy=False)
+    #ty = ty.astype('float', copy= False)
+
     x = x.astype('float', copy=False)
     y = y.astype('float', copy= False)
 
+    #x_train, y_train = tx, ty
+    #x_test, y_test = x, y
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
     #print("x_train: ", len(x_train))
     #print("x_test: ", len(x_test))
     #print("y_train: ", len(y_train))
     #print("y_test: ", len(y_test))
 
-    xgb_wrapper = XGBClassifier(n_estimators = 400, learning_rate = 0.1 , max_depth = 3)
+    xgb_wrapper = XGBClassifier(n_estimators = 400, learning_rate = 0.1 , max_depth = 3, eval_metric="mlogloss")
     xgb_wrapper.fit(x_train, y_train)
     y_pred = xgb_wrapper.predict(x_test)
     get_clf_eval(y_test, y_pred)
-
+    print(y_pred)
+    print(y_test)
     #끊는 선 찾는 방법.
     # evals = [(x_test, y_test)]
     # xgb_wrapper.fit(x_train, y_train, early_stopping_rounds=100, eval_metric="mlogloss", eval_set=evals, verbose=True)
@@ -46,7 +52,7 @@ def runXGBoost(x, y, num):
     ftr_importances_values = xgb_wrapper.feature_importances_
     ftr_importances_10 = pd.Series(ftr_importances_values, index=x_train.columns)
     ftr_importances = pd.DataFrame(ftr_importances_values, index = x_train.columns)
-    print(ftr_importances)
+    #print(ftr_importances)
     ftr_top10 = ftr_importances_10.sort_values(ascending=False)[:10]
 
     #plt.figure(figsize=(13,10))
@@ -73,7 +79,7 @@ def severalTimesrunXGBoost(x, y, num):
             result.to_excel('result.xlsx')
 
         else:
-            df2 = runXGBoost(x, y, i)
+            df2 =  runXGBoost(x, y, i)
             result = pd.concat([result, df2], axis=1)
 
 
@@ -86,7 +92,7 @@ def get_clf_eval(y_test, y_pred):
     F1 = f1_score(y_test, y_pred, average='micro')
     # AUC = roc_auc_score(y_test, y_pred, multi_class="ovr",average='micro')
 
-    print('confusion:\n', confusion)
+    #print('confusion:\n', confusion)
     print('\naccuracy: {:.4f}'.format(accuracy))
     print('precision: {:.4f}'.format(precision))
     print('recall: {:.4f}'.format(recall))
