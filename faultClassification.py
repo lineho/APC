@@ -5,12 +5,9 @@ import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import MinMaxScaler
 from sklearn import metrics
-from xgboost import XGBRegressor
-from xgboost import plot_importance
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
 from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score
-from xgboost import XGBClassifier
 
 def randomForest():
     print("start random forest")
@@ -58,7 +55,6 @@ def removeNoise():
     df.reset_index(drop=True, inplace=True)
 
     df.columns = list_df
-
     print(df)
     df.to_excel('removeNoise_labeling_x_train.xlsx')
     df.to_csv('removeNoise_labeling_x_train.csv')
@@ -77,3 +73,14 @@ def get_clf_eval(y_test, y_pred):
     print('recall: {:.4f}'.format(recall))
     print('F1: {:.4f}'.format(F1))
     # print('AUC: {:.4f}'.format(AUC))
+
+def synthesizeDataInNormalEveryTenSeconds():
+    print("synthesize Data In Normal Every Ten Seconds")
+    #앱노말 데이터 조작 만약 176이 아닐경우 일반적인것에서 가져와서 앱노말 조작(총 200초로 환산 가능하도록 계산)
+    #노말 + 앱노말 10초씩 가져오기.
+    #이것을 randomforest 돌리기. (랜덤포레스트 돌릴때 변수를 주어야 저장될때 알게 저장될 듯.)
+
+def Cross_validation():
+    print("Cross_validation")
+    #교차검증하는 방법 생각.
+    #최종적으로 무엇이 문제인지도 표출해야함.

@@ -1,21 +1,10 @@
 import DB
-import pymysql
-import pandas as pd
-from pandas import DataFrame
-from sqlalchemy import create_engine
 import numpy as np
-import xlsxwriter
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import MinMaxScaler
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 import pandas as pd
-import matplotlib as mpl
 from matplotlib import pyplot as plt
-import seaborn as sns
-import kmeans1d
 from sklearn.cluster import KMeans
-from collections import Counter
-import sys
+
 
 def isNumeric(db):
     print("Start train data isNumeric")
@@ -23,13 +12,14 @@ def isNumeric(db):
     cursor = db.cursor()
     print("DB Connect Success")
     cursor.execute("""
-                    SELECT COUNT(*) 
-                    FROM information_schema.columns 
-                    WHERE table_name='normaldata';
-                    """)
+                        SELECT COUNT(*)
+                        FROM information_schema.columns 
+                        WHERE table_name='normaldata'AND TABLE_SCHEMA = 'etch_20201022'
+    """)
     countColNum = cursor.fetchone()
+    print(countColNum)
     countColNum = countColNum[0]
-    # print(countColNum)
+    print(countColNum)
 
     sql_countRowNum = "SELECT COUNT(*) FROM normaldata"
     cursor.execute(sql_countRowNum)
@@ -292,3 +282,26 @@ def testdbFinalFormToAnalyze():
     df.columns.tolist()
 
     df.to_excel('after_preprocessing_test_data.xlsx')
+
+
+def listClassification(db):
+    print("Start fdc_list list Classification")
+
+    query = "SELECT * FROM fdc_list ORDER BY VID"
+    df_fdc_list = pd.read_sql_query(query, DB.connectDB())
+    del df_fdc_list['VID']
+    del df_fdc_list['Units']
+    del df_fdc_list['ENUMs']
+    del df_fdc_list['DataType']
+    df_fdc_list = df_fdc_list.set_index(['Index'])
+    c = ['mfc', 'OES', 'Bias', 'RF', 'TCP', 'Chuck', 'ESC', 'Temperature', 'Pressure', 'Chamber', 'Turbo', 'Throttle']
+    df_fdc_list = df_fdc_list.assign(**dict.fromkeys(c, 0))
+    print(df_fdc_list)
+
+    for index, row in df_fdc_list.iterrows():
+        print(index, row['FullName'])
+        for i in c:
+            if row['FullName'].find(i) != -1:
+                print(row['FullName'],"에서 ",i,"찾았다.")
+                df_fdc_list.loc[[index],i] = 1
+    df_fdc_list.to_excel('pre_df_fdc_list.xlsx')
