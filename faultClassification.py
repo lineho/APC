@@ -1,18 +1,15 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import MinMaxScaler
 from sklearn import metrics
-from sklearn.inspection import permutation_importance
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
 from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score
 
 def randomForest():
     print("start random forest")
     #테스트 데이터란 정상 Full 비정상 10개만. (10초안에 받았다고 판정.)
-    df = pd.read_excel('test.xlsx', header=0)
+    df = pd.read_excel('xlsx/test.xlsx', header=0)
     df.rename(columns={"Unnamed: 0": "time"}, inplace=True)
     del df['time']
     y = df['label']
@@ -38,11 +35,11 @@ def randomForest():
     plt.xlabel("importanc rate")
     sns.barplot(x=ftr_top10, y=ftr_top10.index)
     plt.show()
-    ftr_importances.to_excel('ftr_importances.xlsx')
+    ftr_importances.to_excel('xlsx/ftr_importances.xlsx')
 
 
 def removeNoise():
-    df = pd.read_csv('labeling_x_train.csv', header=0)
+    df = pd.read_csv('xlsx/labeling_x_train.csv', header=0)
     df_label = df['label']
     df = df.set_index(['time'])
     list_df = list(df)
@@ -56,8 +53,8 @@ def removeNoise():
 
     df.columns = list_df
     print(df)
-    df.to_excel('removeNoise_labeling_x_train.xlsx')
-    df.to_csv('removeNoise_labeling_x_train.csv')
+    df.to_excel('xlsx/removeNoise_labeling_x_train.xlsx')
+    df.to_csv('xlsx/removeNoise_labeling_x_train.csv')
 
 def get_clf_eval(y_test, y_pred):
     confusion = confusion_matrix(y_test, y_pred)
@@ -74,13 +71,18 @@ def get_clf_eval(y_test, y_pred):
     print('F1: {:.4f}'.format(F1))
     # print('AUC: {:.4f}'.format(AUC))
 
-def synthesizeDataInNormalEveryTenSeconds():
+def synthesizeDataInNormalEveryTenSeconds(numberofManipulation):
     print("synthesize Data In Normal Every Ten Seconds")
-    #앱노말 데이터 조작 만약 176이 아닐경우 일반적인것에서 가져와서 앱노말 조작(총 200초로 환산 가능하도록 계산)
-    #노말 + 앱노말 10초씩 가져오기.
+    df_normal = pd.read_csv('xlsx/after_preprocessing_train_data.xlsx', header=0)
+    print(df_normal)
+    #새로운 것 불러오기
+    #열 맞춰서 제거.
+    #노말통 + 앱노말 10초씩 가져오기.
     #이것을 randomforest 돌리기. (랜덤포레스트 돌릴때 변수를 주어야 저장될때 알게 저장될 듯.)
+    # 랜덤포레스트 돌린거 따로 FC 폴더에 집어넣어야될 듯
 
 def Cross_validation():
     print("Cross_validation")
     #교차검증하는 방법 생각.
     #최종적으로 무엇이 문제인지도 표출해야함.
+
