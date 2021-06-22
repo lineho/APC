@@ -4,6 +4,7 @@ from sklearn.ensemble import IsolationForest
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
+import shap
 
 
 def anomalyDetectionTrain(df, dicToCheckActualVIDs):
@@ -36,24 +37,25 @@ def anomalyDetectionScore(df):
     dic_pri = {1: 0 , -1 : 0}
     dic_real = to_frequency_table(df['real_labeled'])
     dic_pred = to_frequency_table(df['pred_labeled'])
-    print("real: ",{k: dic_pri.get(k, 0) + dic_real.get(k, 0) for k in set(dic_pri) | set(dic_real)})
-    print("pred: ",{k: dic_pri.get(k, 0) + dic_pred.get(k, 0) for k in set(dic_pri) | set(dic_pred)})
+    dic_real = {k: dic_pri.get(k, 0) + dic_real.get(k, 0) for k in set(dic_pri) | set(dic_real)}
+    dic_pred = {k: dic_pri.get(k, 0) + dic_pred.get(k, 0) for k in set(dic_pri) | set(dic_pred)}
+    print("real: ", dic_real)
+    print("pred: ", dic_pred)
 
     y_true = df['real_labeled'].tolist()
     y_pred = df['pred_labeled'].tolist()
     confmat = confusion_matrix(y_true, y_pred, labels= [1, -1])
     print(confmat)
     print(classification_report(y_true, y_pred))
-    print_metrics(y_true,y_pred, "분석결과")
-
-    accuracy = accuracy_score(y_true, y_pred)
-    return accuracy
+    print_metrics(y_true,y_pred, "Analysis result")
+    abnormalDataRate = dic_pred[-1] / (dic_pred[1] + dic_pred[-1]) * 100
+    return abnormalDataRate
 
 def print_metrics(y, pred_y, title=None):
     print(title)
-    print("정확도:", accuracy_score(y, pred_y))
-    print('재현율(recall):', recall_score(y, pred_y))
-    print('정밀도(precision):', precision_score(y, pred_y))
+    print("Accuracy:", accuracy_score(y, pred_y))
+    print('Recall:', recall_score(y, pred_y))
+    print('Precision:', precision_score(y, pred_y))
     print('F1 score:', f1_score(y, pred_y))
 
 def to_frequency_table(data):

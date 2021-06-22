@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     df_normalIntergrated = pd.DataFrame()
     listOfNormalAndAbnormal = [] #real label
-    listOfAccuracy = []
+    list_abnormalDataRate = []
     for runNum in range(1, processCount + 1): #raw data
         globals()['df_raw_{}'.format(runNum)] = pd.DataFrame()
     for runNum in range(1, processCount + 1): #manipulation data
@@ -152,7 +152,6 @@ if __name__ == "__main__":
         globals()['df_{}'.format(runNum)] = globals()['df_{}'.format(runNum)].set_index(['time'])
     print("complete data load")
     ######################################################################################
-
     #Fault detection
     #train
     df_normalIntergrated_labeled, fdModel = fd.anomalyDetectionTrain(df_normalIntergrated, dicToCheckActualVIDs)
@@ -175,23 +174,27 @@ if __name__ == "__main__":
 
     #FD score
     for runNum in range(1, processCount+1):
-        print("FD predict score, run number: ", runNum)
-        fd_accuracy_each = fd.anomalyDetectionScore(globals()['df_fd_{}'.format(runNum)])
-        listOfAccuracy.append(fd_accuracy_each)
-    print("에베베베", len(listOfAccuracy),listOfAccuracy)
+        print("FD predict score, run number:s ", runNum)
+        fd_recall_each = fd.anomalyDetectionScore(globals()['df_fd_{}'.format(runNum)])
+        list_abnormalDataRate.append(fd_recall_each)
 
     print("FD predict score, all")
     df_total = pd.DataFrame()
     for runNum in range(1, processCount+1):
         df_total = pd.concat([df_total, globals()['df_fd_{}'.format(runNum)]], ignore_index=True)
 
-    fd_accuracy_total = fd.anomalyDetectionScore(df_total)
+    fd_recall_total = fd.anomalyDetectionScore(df_total)
 
+    ######################################################################################
 
     #fault classification
     #교차비교(같은 FDC_list를 가졌음에도 불구하고 흔들리지 않는 것과 흔들리는 것의 차이)
-
-
+    for runNum in range(1, processCount+1):
+        print("runNum:", runNum, ",abnormalDataRate is",list_abnormalDataRate[runNum-1], "%")
+        if list_abnormalDataRate[runNum-1] <= 10 :
+            print("This is a normal process, so FC don't proceed with the analysis.")
+        else:
+            print("비정상")
     #test(오세창 박사님의 리그레션) (4단계: VID to set, OES to VID, OES to set, VID and OES to set)
 
 
