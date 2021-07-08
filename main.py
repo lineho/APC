@@ -30,9 +30,11 @@ if __name__ == "__main__":
     #init variable
     processCount = sf.main_processCount
     tableName = sf.main_tableName
+    fc_tableName = sf.fc_tableName
     dicToCheckSetVIDs = sf.main_dicToCheckSetVIDs
     dicToCheckSetVIDsVaule = sf.main_dicToCheckSetVIDsVaule
     dicToCheckActualVIDs = sf.main_dicToCheckActualVIDs
+    prcessParameters = sf.process_Parameter
 
     createFolder('./data')
     createFolder('./data/df_raw')
@@ -46,6 +48,7 @@ if __name__ == "__main__":
     df_normalIntergrated = pd.DataFrame()
     listOfNormalAndAbnormal = [] #real label
     list_abnormalDataRate = []
+    list_usedSVID = []
     for runNum in range(1, processCount + 1): #raw data
         globals()['df_raw_{}'.format(runNum)] = pd.DataFrame()
     for runNum in range(1, processCount + 1): #manipulation data
@@ -57,16 +60,19 @@ if __name__ == "__main__":
 
     #Before preprocessing (Manipulation step)
     ################################################################
-    # Data Normal Abnormal Classification and Normal Data Integration Steps
-    for runNum in range(1, processCount+1):
-        globals()['df_raw_{}'.format(runNum)] = bpp.getEveryRun(data.connectDB(), data.db, runNum, tableName, sf.da_time, sf.da_mainprocess)
-        isNormal, globals()['listOffault_{}'.format(runNum)] = bpp.distributeNormalAndAbnormal(globals()['df_raw_{}'.format(runNum)], dicToCheckSetVIDs, dicToCheckSetVIDsVaule)
-        listOfNormalAndAbnormal.append(isNormal)
+    # # Data Normal Abnormal Classification and Normal Data Integration Steps
+    # for runNum in range(1, processCount+1):
+    #     globals()['df_raw_{}'.format(runNum)] = bpp.getEveryRun(data.connectDB(), data.db, runNum, tableName, sf.da_time, sf.da_mainprocess)
+    #     isNormal, globals()['listOffault_{}'.format(runNum)] = bpp.distributeNormalAndAbnormal(globals()['df_raw_{}'.format(runNum)], dicToCheckSetVIDs, dicToCheckSetVIDsVaule)
+    #     listOfNormalAndAbnormal.append(isNormal)
     #     if isNormal == 1:
     #         df_normalIntergrated = pd.concat([df_normalIntergrated, globals()['df_raw_{}'.format(runNum)]])
     #     globals()['df_raw_{}'.format(runNum)].to_excel('./data/df_raw/df_raw_{}.xlsx'.format(runNum))
     #     globals()['df_listOffault_{}'.format(runNum)] = pd.DataFrame(globals()['listOffault_{}'.format(runNum)])
     #     globals()['df_listOffault_{}'.format(runNum)].to_excel('./data/etc/df_listOffault_{}.xlsx'.format(runNum))
+    #
+    # with open('listOfNormalAndAbnormal.pkl', 'wb') as f:
+    #     pickle.dump(listOfNormalAndAbnormal, f)
     #
     # # Data Manipulation Stage
     # for runNum in range(1, processCount+1):
@@ -77,7 +83,7 @@ if __name__ == "__main__":
     #     else:
     #         globals()['df_{}'.format(runNum)] = globals()['df_raw_{}'.format(runNum)]
     #
-    #     # globals()['df_{}'.format(runNum)].to_excel('./data/df/df_{}.xlsx'.format(runNum))
+    #  ###### globals()['df_{}'.format(runNum)].to_excel('./data/df/df_{}.xlsx'.format(runNum))
     #
     # ################################################################
     #
@@ -105,7 +111,7 @@ if __name__ == "__main__":
     #     print("Start delete CONSTANT value, run number: ", runNum)
     #     globals()['df_{}'.format(runNum)] = pp.deleteConstantValue(globals()['df_{}'.format(runNum)], listOfConstant_all)
     #
-    #     # globals()['df_{}'.format(runNum)].to_excel('./data/df/df_{}.xlsx'.format(runNum))
+    # globals()['df_{}'.format(runNum)].to_excel('./data/df/df_{}.xlsx'.format(runNum))
     #
     # #VIF factor 살리는 것 구하기(노멀)
     # listOfVIF_all = copy.deepcopy(listOfVID_all)
@@ -150,51 +156,57 @@ if __name__ == "__main__":
         globals()['df_{}'.format(runNum)] = pd.read_excel('./data/after_vif/df_{}.xlsx'.format(runNum))
         globals()['df_{}'.format(runNum)].rename(columns={"Unnamed: 0": "time"}, inplace=True)
         globals()['df_{}'.format(runNum)] = globals()['df_{}'.format(runNum)].set_index(['time'])
+
+    with open('./listOfNormalAndAbnormal.pkl', 'rb') as f:
+        listOfNormalAndAbnormal = pickle.load(f)
     print("complete data load")
+
     ######################################################################################
     #Fault detection
     #train
-    df_normalIntergrated_labeled, fdModel = fd.anomalyDetectionTrain(df_normalIntergrated, dicToCheckActualVIDs)
+    df_normalIntergrated_labeled = fd.anomalyDetectionTrain(df_normalIntergrated, dicToCheckActualVIDs)
     df_normalIntergrated_labeled.to_excel('./data/fd/df_normalIntergrated_labeled.xlsx')
 
-    #Fault detection
-    #test
-    for runNum in range(1, processCount+1):
-        if listOfNormalAndAbnormal[runNum-1] == 1:
-            print("Start FD predict, run number: ", runNum)
-            globals()['df_fd_{}'.format(runNum)] = fd.anomalyDetectionTest(globals()['df_{}'.format(runNum)], fdModel, dicToCheckActualVIDs)
-            globals()['df_fd_{}'.format(runNum)]['real_labeled'] = 1
-            globals()['df_fd_{}'.format(runNum)].to_excel('./data/fd/df_fd_{}.xlsx'.format(runNum))
+    # Fault detection
 
-        else:
-            print("Start FD predict, run number: ", runNum)
-            globals()['df_fd_{}'.format(runNum)] = fd.anomalyDetectionTest(globals()['df_{}'.format(runNum)], fdModel, dicToCheckActualVIDs)
-            globals()['df_fd_{}'.format(runNum)]['real_labeled'] = -1
-            globals()['df_fd_{}'.format(runNum)].to_excel('./data/fd/df_fd_{}.xlsx'.format(runNum))
+    for runNum in range(1, processCount+1):
+        globals()['df_fd_{}'.format(runNum)] = fd.anomalyDetectionTest(globals()['df_{}'.format(runNum)], dicToCheckActualVIDs)
 
     #FD score
+    for runNum in range(1, processCount + 1):
+        if listOfNormalAndAbnormal[runNum - 1] == 1:
+            globals()['df_{}'.format(runNum)]['real_labeled'] = 1
+            globals()['df_{}'.format(runNum)].to_excel('./data/fd/df_fd_{}.xlsx'.format(runNum))
+        else:
+            globals()['df_{}'.format(runNum)]['real_labeled'] = -1
+            globals()['df_{}'.format(runNum)].to_excel('./data/fd/df_fd_{}.xlsx'.format(runNum))
+
     for runNum in range(1, processCount+1):
         print("FD predict score, run number:s ", runNum)
-        fd_recall_each = fd.anomalyDetectionScore(globals()['df_fd_{}'.format(runNum)])
-        list_abnormalDataRate.append(fd_recall_each)
+        fd_score_each = fd.anomalyDetectionScore(globals()['df_{}'.format(runNum)])
+        list_abnormalDataRate.append(fd_score_each)
 
     print("FD predict score, all")
     df_total = pd.DataFrame()
     for runNum in range(1, processCount+1):
-        df_total = pd.concat([df_total, globals()['df_fd_{}'.format(runNum)]], ignore_index=True)
+        df_total = pd.concat([df_total, globals()['df_{}'.format(runNum)]], ignore_index=True)
+    df_total.to_excel('./data/fd/df_allIntergrated_labeled.xlsx')
 
-    fd_recall_total = fd.anomalyDetectionScore(df_total)
+    fd_score_total = fd.anomalyDetectionScore(df_total)
 
     ######################################################################################
+    #
+    # #fault classification
+    # #fdc_list database 불러와서 저장하기.
+    # df_nameOfSVID, doubleList_nameOfSVID = fc.getNameOfSVID(data.connectDB(), fc_tableName)
+    # resultWordAnalsis = fc.wordAnalsis(doubleList_nameOfSVID, prcessParameters) # emulator 써서 0부터 시작인거 알아야함.
+    # for runNum in range(1, processCount+1):
+    #     print("runNum:", runNum, ",abnormalDataRate is",list_abnormalDataRate[runNum-1], "%")
+    #     if list_abnormalDataRate[runNum-1] <= 20 :
+    #         print("This is a normal process, so FC don't proceed with the analysis.")
+    #     else:
+    #         print("Abnormal Process Occurrence!")
 
-    #fault classification
-    #교차비교(같은 FDC_list를 가졌음에도 불구하고 흔들리지 않는 것과 흔들리는 것의 차이)
-    for runNum in range(1, processCount+1):
-        print("runNum:", runNum, ",abnormalDataRate is",list_abnormalDataRate[runNum-1], "%")
-        if list_abnormalDataRate[runNum-1] <= 10 :
-            print("This is a normal process, so FC don't proceed with the analysis.")
-        else:
-            print("비정상")
     #test(오세창 박사님의 리그레션) (4단계: VID to set, OES to VID, OES to set, VID and OES to set)
 
 

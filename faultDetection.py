@@ -6,31 +6,35 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 import shap
 
-
 def anomalyDetectionTrain(df, dicToCheckActualVIDs):
     x_train = df
     print("start anomaly train")
     for value in dicToCheckActualVIDs.values():
         del x_train[value]
 
-    svm = OneClassSVM(kernel='rbf', gamma=0.01, nu=0.038)
+    svm = OneClassSVM(kernel='rbf', gamma=100, nu=0.0068)
+
     svm.fit(x_train)
     svm.fit(x_train)
     print("complete svm fit")
-    saved_model = pickle.dumps(svm)
 
-    return x_train, saved_model
+    with open('trainSvm.pkl', 'wb') as f:
+        pickle.dump(svm, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-def anomalyDetectionTest(df, model, dicToCheckActualVIDs):
-    clf_from_pickle = pickle.loads(model)
+    return x_train
+
+def anomalyDetectionTest(df, dicToCheckActualVIDs):
+    with open('trainSvm.pkl', 'rb') as f:
+        clf_from_pickle = pickle.load(f)
+    dfCopy = df.copy()
     for value in dicToCheckActualVIDs.values():
-        del df[value]
+        del dfCopy[value]
 
-    y_pred = clf_from_pickle.predict(df)
+    y_pred = clf_from_pickle.predict(dfCopy)
     print("complete svm y_pred")
     df['pred_labeled'] = y_pred
 
-    return df
+    return dfCopy
 
 def anomalyDetectionScore(df):
 
