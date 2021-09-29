@@ -60,9 +60,11 @@ def getVIF(df):
         df_vif.reset_index(drop=True, inplace=True)
         df_vif.drop([df_vif.columns[0], df_vif.columns[1]], axis=1)
         df_vif = df_vif[df_vif['VIF_factor'] != np.inf]
-        # isVIFunder10 = df_vif['VIF_factor'] <= 10
-        # df_vif = df_vif[isVIFunder10]
+        isVIFunder10 = df_vif['VIF_factor'] <= 100
+        df_vif = df_vif[isVIFunder10]
         df_vif_list = df_vif['features'].tolist()
+        df_vif.to_excel('./data/vif/df_vif.xlsx')
+
         return df_vif, df_vif_list
 
     except Exception as ex:

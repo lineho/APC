@@ -8,6 +8,7 @@ import faultClassification as fc
 import test
 
 import pandas as pd
+import sys
 import os
 import copy
 import pickle
@@ -44,6 +45,9 @@ if __name__ == "__main__":
     createFolder('./data/after_vif_csv')
     createFolder('./data/fd')
     createFolder('./data/etc')
+    createFolder('./data/fc')
+    createFolder('./image')
+
 
     df_normalIntergrated = pd.DataFrame()
     listOfNormalAndAbnormal = [] #real label
@@ -139,14 +143,14 @@ if __name__ == "__main__":
     #
     # df_normalIntergrated.to_excel('./data/after_vif/df_normalIntergrated.xlsx')
     # df_normalIntergrated.to_csv('./data/after_vif_csv/df_normalIntergrated.csv')
-
+    #
     ################################################################
 
     #Fault detection Algorithm
     #train
 
     ################################################################################
-    #test: 데이터 불러오기
+    # #test: 데이터 불러오기
     print("data load")
     df_normalIntergrated = pd.read_excel('./data/after_vif/df_normalIntergrated.xlsx')
     df_normalIntergrated.rename(columns={"Unnamed: 0": "time"}, inplace=True)
@@ -165,10 +169,11 @@ if __name__ == "__main__":
     #Fault detection
     #train
     df_normalIntergrated_labeled = fd.anomalyDetectionTrain(df_normalIntergrated, dicToCheckActualVIDs)
+    df_normalIntergrated_labeled['real_labeled'] = 1
+    df_normalIntergrated_labeled['pred_labeled'] = 1
     df_normalIntergrated_labeled.to_excel('./data/fd/df_normalIntergrated_labeled.xlsx')
-
+    #
     # Fault detection
-
     for runNum in range(1, processCount+1):
         globals()['df_fd_{}'.format(runNum)] = fd.anomalyDetectionTest(globals()['df_{}'.format(runNum)], dicToCheckActualVIDs)
 
@@ -183,7 +188,7 @@ if __name__ == "__main__":
 
     for runNum in range(1, processCount+1):
         print("FD predict score, run number:s ", runNum)
-        fd_score_each = fd.anomalyDetectionScore(globals()['df_{}'.format(runNum)])
+        fd_score_each = fd.anomalyDetectionScore(globals()['df_{}'.format(runNum)], 0)
         list_abnormalDataRate.append(fd_score_each)
 
     print("FD predict score, all")
@@ -192,21 +197,21 @@ if __name__ == "__main__":
         df_total = pd.concat([df_total, globals()['df_{}'.format(runNum)]], ignore_index=True)
     df_total.to_excel('./data/fd/df_allIntergrated_labeled.xlsx')
 
-    fd_score_total = fd.anomalyDetectionScore(df_total)
+    fd_score_total = fd.anomalyDetectionScore(df_total, 1)
 
     ######################################################################################
-    #
+    # #
     # #fault classification
     # #fdc_list database 불러와서 저장하기.
     # df_nameOfSVID, doubleList_nameOfSVID = fc.getNameOfSVID(data.connectDB(), fc_tableName)
     # resultWordAnalsis = fc.wordAnalsis(doubleList_nameOfSVID, prcessParameters) # emulator 써서 0부터 시작인거 알아야함.
     # for runNum in range(1, processCount+1):
     #     print("runNum:", runNum, ",abnormalDataRate is",list_abnormalDataRate[runNum-1], "%")
-    #     if list_abnormalDataRate[runNum-1] <= 20 :
+    #     if list_abnormalDataRate[runNum-1] <= 80 :
     #         print("This is a normal process, so FC don't proceed with the analysis.")
     #     else:
     #         print("Abnormal Process Occurrence!")
-
-    #test(오세창 박사님의 리그레션) (4단계: VID to set, OES to VID, OES to set, VID and OES to set)
-
-
+    #         df_importanceEach = fc.gbm(runNum, globals()['df_{}'.format(runNum)], df_normalIntergrated_labeled, dicToCheckActualVIDs)
+    #
+    # df_importanceTotal = fc.totalclassification(df_total, dicToCheckActualVIDs)
+    # fc.detectRootCause(prcessParameters, df_importanceTotal, resultWordAnalsis)
